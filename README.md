@@ -79,42 +79,73 @@ Inside the `~/docker-php73` directory, create the following two files using the 
 This compiles a Debian 12 Slim environment injecting Ondřej Surý's archive repositories. It forces the PHP-FPM master and worker pools to run as `root` internally. This is fully secure because the container's `root` map resolves directly to the unprivileged `ACCOUNT_NAME` UID on the host, preventing all standard filesystem permission issues.
 
 ```dockerfile
+# Cambiamos la base oficialmente a la versión Slim de Debian 12 (Bookworm)
 FROM debian:12-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Instalar dependencias esenciales del sistema para inyectar repositorios de forma moderna
 RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-transport-https \
     ca-certificates \
     curl \
     gnupg2 \
     lsb-release \
-    && curl -sSLo /usr/share/keyrings/deb.sury.org-php.gpg https://sury.org \
-    && echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://sury.org \$(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list \
+    && curl -sSLo /usr/share/keyrings/deb.sury.org-php.gpg https://packages.sury.org/php/apt.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list \
     && apt-get update
 
+# Instalar PHP 7.3 base, CLI, FPM y DEV (necesario para PEAR) parcheados contra PHP2Shell
 RUN apt-get install -y --no-install-recommends \
-    php7.3-cli php7.3-fpm php7.3-common php7.3-dev php-pear \
-    php7.3-bcmath php7.3-bz2 php7.3-calendar php7.3-curl php7.3-dba \
-    php7.3-enchant php7.3-gd php7.3-gmp php7.3-imap php7.3-intl \
-    php7.3-mbstring php7.3-mysql php7.3-odbc php7.3-opcache php7.3-pgsql \
-    php7.3-soap php7.3-xml php7.3-zip php7.3-tidy php7.3-imagick \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    php7.3-cli \
+    php7.3-fpm \
+    php7.3-common \
+    php7.3-dev \
+    php-pear
 
-# Configure PHP-FPM to listen to open TCP network connections on port 9000
+# Instalar tu lista exacta de módulos requeridos
+RUN apt-get install -y --no-install-recommends \
+    php7.3-bcmath \
+    php7.3-bz2 \
+    php7.3-calendar \
+    php7.3-curl \
+    php7.3-dba \
+    php7.3-enchant \
+    php7.3-gd \
+    php7.3-gmp \
+    php7.3-imap \
+    php7.3-intl \
+    php7.3-mbstring \
+    php7.3-mysql \
+    php7.3-odbc \
+    php7.3-opcache \
+    php7.3-pgsql \
+    php7.3-soap \
+    php7.3-xml \
+    php7.3-zip \
+    php7.3-tidy \
+    php7.3-imagick
+
+# Limpieza estricta de temporales para reducir el tamaño final del contenedor
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Configurar PHP-FPM para responder peticiones TCP abiertas en el puerto 9000
 RUN sed -i 's|listen = /run/php/php7.3-fpm.sock|listen = 0.0.0.0:9000|' /etc/php/7.3/fpm/pool.d/www.conf
 
-# Force the 'www' pool worker to run as root to match host file ownership under Rootless mapping
+# NUEVO: Forzar al pool 'www' a ejecutarse como root para compatibilidad Rootless con cPanel
 RUN sed -i 's/user = www-data/user = root/' /etc/php/7.3/fpm/pool.d/www.conf \
     && sed -i 's/group = www-data/group = root/' /etc/php/7.3/fpm/pool.d/www.conf
 
+# Reciclaje preventivo de procesos por estabilidad
 RUN echo "pm.max_requests = 500" >> /etc/php/7.3/fpm/pool.d/www.conf
+
+# Crear el directorio del socket del daemon y exponer el puerto
 RUN mkdir -p /run/php
 EXPOSE 9000
 
 WORKDIR /var/www/html
 
-# Launch PHP-FPM with the allow-root flag (-R) mandatory for modified pools
+# Lanzamiento de PHP-FPM en primer plano permitiendo root (-R)
 CMD ["/usr/sbin/php-fpm7.3", "-F", "-R"]
 ```
 
