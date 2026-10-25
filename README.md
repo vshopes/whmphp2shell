@@ -234,3 +234,8 @@ Log back in as **`root`** on the server terminal and complete the hooks:
 1. Drop a standard test file containing the `phpinfo();` function into `/home/ACCOUNT_NAME/public_html/info.php`.
 2. Go to **MultiPHP Manager** inside WHM or the account's cPanel interface, and assign **PHP 8.2**. Refresh the site in your browser; it will seamlessly load the server's native modern environment.
 3. Switch the profile back to **PHP 7.3**. Refresh the site again. The conditional include will trap the request before the default handlers execute, and the `phpinfo()` layout will display system signatures referencing **Debian** and the unique alfanumeric hash of your isolated container.
+
+## STEP 7: Reusing the Compiled Image Across Multiple Accounts (Optional)
+
+To share the compiled Podman image with `NEW_ACCOUNT_NAME` without recompiling, use the global image sharing method. Execute the registration, infrastructure setup for the secondary account, deployment via `docker-compose`, and Apache routing configuration as detailed in your deployment procedures.
+
