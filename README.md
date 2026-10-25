@@ -1,7 +1,7 @@
 # whmphp2shell
 Solve PHP2Shell in WHM for PHP7.3
 Integrated with PHP MultiPHP 
-Using Ondřej Surý work 
+#Using Ondřej Surý work 
 SO MANY THANKS TO YOU!!!!! https://launchpad.net/~ondrej/+archive/ubuntu/php
 
 (If you want to do it for PHP5.6 you have to prepare a dockerfile for PHP5.6)  
