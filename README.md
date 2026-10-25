@@ -237,5 +237,34 @@ Log back in as **`root`** on the server terminal and complete the hooks:
 
 ## STEP 7: Reusing the Compiled Image Across Multiple Accounts (Optional)
 
-To share the compiled Podman image with `NEW_ACCOUNT_NAME` without recompiling, use the global image sharing method. Execute the registration, infrastructure setup for the secondary account, deployment via `docker-compose`, and Apache routing configuration as detailed in your deployment procedures.
+You can reuse the pre-compiled PHP 7.3 image for a secondary cPanel user (`NEW_ACCOUNT`) using two methods:
+
+---
+
+### Method A: Sharing the Image Globally via Root (Recommended)
+
+1. **Register the compiled image as `root`:**
+   ```bash
+   podman image scp ACCOUNT_NAME@localhost::docker-php73-php-app:latest localhost::localhost/php73-legacy:latest
+   ```
+
+2. **Deploy on `NEW_ACCOUNT`:** Set up the environment, configure `docker-compose.yml` with a unique port (e.g., `9074`) and the volume `/home/NEW_ACCOUNT/public_html:/var/www/html:rw`, run `docker-compose up -d`, and apply Apache routing (STEP 5) with the updated port.
+
+---
+
+### Method B: Export and Import via a Compressed `.tar` File
+
+1. **Export the image as `ACCOUNT_NAME`:**
+   ```bash
+   podman save -o ~/image_php73_legacy.tar docker-php73-php-app:latest
+   ```
+
+2. **Transfer and change ownership as `root`:**
+   ```bash
+   mv /home/ACCOUNT_NAME/image_php73_legacy.tar /home/NEW_ACCOUNT/
+   chown NEW_ACCOUNT:NEW_ACCOUNT /home/NEW_ACCOUNT/image_php73_legacy.tar
+   ```
+
+3. **Import and deploy as `NEW_ACCOUNT`:** Load the archive via `podman load -i ~/image_php73_legacy.tar` and launch `docker-compose up -d`.
+
 
