@@ -1,5 +1,5 @@
 # whmphp2shell
-Solve PHP2Shell in WHM for PHP7.3
+A Solution for PHP2Shell in WHM for PHP7.3 
 Integrated with PHP MultiPHP 
 # Using Ondřej Surý work 
 SO MANY THANKS TO YOU!!!!! https://launchpad.net/~ondrej/+archive/ubuntu/php
